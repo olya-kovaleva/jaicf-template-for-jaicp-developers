@@ -3,6 +3,7 @@ package com.justai.jaicf.template
 import com.justai.jaicf.BotEngine
 import com.justai.jaicf.activator.caila.CailaIntentActivator
 import com.justai.jaicf.activator.regex.RegexActivator
+import com.justai.jaicf.channel.ConsoleChannel
 import com.justai.jaicf.channel.jaicp.channels.ChatApiChannel
 import com.justai.jaicf.channel.jaicp.channels.ChatWidgetChannel
 import com.justai.jaicf.channel.jaicp.channels.TelephonyChannel
@@ -25,5 +26,6 @@ val templateBot = BotEngine(
 )
 
 fun main() {
-    templateBot.run(ChatWidgetChannel, ChatApiChannel, TelephonyChannel)
+//    templateBot.run(ChatWidgetChannel, ChatApiChannel, TelephonyChannel)
+    ConsoleChannel(templateBot).run("/start")
 }

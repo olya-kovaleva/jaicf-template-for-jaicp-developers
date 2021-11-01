@@ -6,6 +6,7 @@ import com.justai.jaicf.hook.AnyErrorHook
 import com.justai.jaicf.reactions.buttons
 import com.justai.jaicf.reactions.toState
 import com.justai.jaicf.template.configuration.Configuration
+import com.justai.jaicf.template.extensions.clientInfo
 import io.ktor.util.*
 
 val MainScenario = Scenario {
@@ -17,53 +18,97 @@ val MainScenario = Scenario {
         logger.error(exception)
     }
 
-    state("start") {
+    state("Start") {
         activators {
             regex("/start")
             intent("Hello")
         }
         action {
-            reactions.run {
-                image("https://media.giphy.com/media/ICOgUNjpvO0PC/source.gif")
-                sayRandom(
-                    "Hello! How can I help?",
-                    "Hi there! How can I help you?"
+            reactions.say("Здравствуйте! Я голосовой помощник компании HeadHunter, могу помочь вам с подбором вакансий.")
+            if (clientInfo.wasThere == null) {
+                clientInfo.wasThere = true;
+                reactions.go("/Start/AskName")
+            } else if (clientInfo.searchdata!!.HasFinishedSearch()) {
+                reactions.say("Поиск закончен")
+                //reactions.go("/FinishedSearch")
+            } else if (clientInfo.searchdata!!.HasStartedSearch()) {
+                reactions.say("Поиск начат")
+                //reactions.go("/StartedSearch")
+            } else {
+                reactions.go("/AskCity")
+            }
+        }
+
+        state("AskName") {
+            action {
+                reactions.say("Скажите, пожалуйста, как я могу к вам обращаться?")
+            }
+
+            state("Name") {
+                activators {
+                    intent("Name")
+                }
+
+                action {
+                    
+                }
+            }
+
+            state("Obscene") {
+                activators {
+                    intent("Obscene")
+                }
+
+                action {
+                    reactions.go("/AskCity")
+                }
+            }
+
+            state("NoName") {
+                activators {
+                    intent("No")
+                }
+
+                action {
+                    reactions.say("Как вам будет удобно \uD83D\uDE0A")
+                    reactions.go("/AskCity")
+                }
+            }
+
+            fallback {
+                reactions.sayRandom(
+                    "Это точно твое имя?",
+                    "Так людей не называют"
                 )
-                buttons(
-                    "Bitcoin price" toState "/getBitcoinPrice"
-                )
+            }
+        }
+
+    }
+
+    state("AskCity") {
+        action {
+            if (clientInfo.name == null) {
+                reactions.say("Скажите, в каком городе вы ищете работу?")
+            } else {
+                reactions.say(clientInfo.name + ", в каком городе вы ищете работу?")
             }
         }
     }
 
-    state("bye") {
-        activators {
-            intent("Bye")
-        }
 
-        action {
-            reactions.sayRandom(
-                "See you soon!",
-                "Bye-bye!"
-            )
-            reactions.image("https://media.giphy.com/media/EE185t7OeMbTy/source.gif")
-        }
-    }
 
-    state("smalltalk", noContext = true) {
-        activators {
-            anyIntent()
-        }
 
-        action(caila) {
-            activator.topIntent.answer?.let { reactions.say(it) } ?: reactions.go("/fallback")
-        }
-    }
+//        TODO("Реплика; " +
+//                   "вложенные стэйты для плохих слов и \"Не скажу\" (активируются по интентам); " +
+//            "вложенный локальный фоллбэк (пока без счетчика и уточнения имени)"
+//      )
 
+
+    // Пока оставляем нездоровый фоллбэк
     fallback {
         reactions.sayRandom(
-            "Sorry, I didn't get that...",
-            "Sorry, could you repeat please?"
+            "Я не понимать тебя, хозяйка(",
+            "Перефразируйте фразу"
         )
     }
 }
