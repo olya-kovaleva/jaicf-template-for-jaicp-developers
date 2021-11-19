@@ -26,6 +26,6 @@ val templateBot = BotEngine(
 )
 
 fun main() {
-//    templateBot.run(ChatWidgetChannel, ChatApiChannel, TelephonyChannel)
+    // templateBot.run(ChatWidgetChannel, ChatApiChannel, TelephonyChannel)
     ConsoleChannel(templateBot).run("/start")
 }

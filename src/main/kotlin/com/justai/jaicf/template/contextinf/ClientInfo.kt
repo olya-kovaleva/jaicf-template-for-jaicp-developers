@@ -3,7 +3,7 @@ package com.justai.jaicf.template.contextinf
 
 import com.justai.jaicf.context.BotContext
 
-class Clientinfo (context: BotContext) {
+class clientInfo (context: BotContext) {
     var wasThere: Boolean? by context.client
     var name: String? by context.client
     var searchdata: SearchData? by context.client

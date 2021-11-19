@@ -6,12 +6,13 @@ import com.justai.jaicf.hook.AnyErrorHook
 import com.justai.jaicf.reactions.buttons
 import com.justai.jaicf.reactions.toState
 import com.justai.jaicf.template.configuration.Configuration
+import com.justai.jaicf.template.extensions.SessionInfo
 import com.justai.jaicf.template.extensions.clientInfo
 import io.ktor.util.*
 
 val MainScenario = Scenario {
 
-    append(ExampleBitcoinScenario)
+    append(CityScenario)
 
     handle<AnyErrorHook> {
         reactions.say(Configuration.bot.onErrorReply)
@@ -24,9 +25,10 @@ val MainScenario = Scenario {
             intent("Hello")
         }
         action {
+            SessionInfo.sessionInfoinit()
             reactions.say("Здравствуйте! Я голосовой помощник компании HeadHunter, могу помочь вам с подбором вакансий.")
             if (clientInfo.wasThere == null) {
-                clientInfo.wasThere = true;
+                clientInfo.wasThere = true
                 reactions.go("/Start/AskName")
             } else if (clientInfo.searchdata!!.HasFinishedSearch()) {
                 reactions.say("Поиск закончен")
@@ -44,13 +46,14 @@ val MainScenario = Scenario {
                 reactions.say("Скажите, пожалуйста, как я могу к вам обращаться?")
             }
 
-            state("Name") {
+            state("GetName") {
                 activators {
                     intent("Name")
                 }
-
                 action {
-                    
+                    reactions.say("Приятно познакомиться!")
+                    clientInfo.name = activator.caila?.slots?.get("Name")?.capitalize()
+                    reactions.go("/AskCity")
                 }
             }
 
@@ -75,40 +78,57 @@ val MainScenario = Scenario {
                 }
             }
 
-            fallback {
-                reactions.sayRandom(
-                    "Это точно твое имя?",
-                    "Так людей не называют"
-                )
+            state ("FallbackName") {
+                activators ("/Start/AskName") {
+                    catchAll()
+                }
+                action {
+                    SessionInfo.fallbackCountName++
+                    if (SessionInfo.fallbackCountName < 3) {
+                        clientInfo.name = request.input.capitalize()
+                        reactions.say("${clientInfo.name}, Ваше имя звучит необычно. Мне следует обращаться к вам именно так?")
+                        reactions.buttons("Да" toState "./Yes", "Нет" toState "./No")
+                    } else {
+                        reactions.go("/AskCity")
+                        clientInfo.name = null
+                    }
+                }
+
+                state ("Yes") {
+                    activators ("/Start/AskName/FallbackName"){
+                        intent("Yes")
+                    }
+
+                    action {
+                        reactions.say("Приятно познакомиться!")
+                        reactions.go("/AskCity")
+                    }
+                }
+
+                state ("No") {
+                    activators ("/Start/AskName/FallbackName") {
+                        intent("No")
+                    }
+
+                    action {
+                        reactions.say("Прошу прощения! Скажите, пожалуйста, как я могу к вам обращаться?")
+                        // reactions.go("..")
+                    }
+                }
             }
         }
-
     }
 
-    state("AskCity") {
-        action {
-            if (clientInfo.name == null) {
-                reactions.say("Скажите, в каком городе вы ищете работу?")
-            } else {
-                reactions.say(clientInfo.name + ", в каком городе вы ищете работу?")
-            }
-        }
-    }
-
-
-
-
-//        TODO("Реплика; " +
-//                   "вложенные стэйты для плохих слов и \"Не скажу\" (активируются по интентам); " +
-//            "вложенный локальный фоллбэк (пока без счетчика и уточнения имени)"
-//      )
-
-
-    // Пока оставляем нездоровый фоллбэк
     fallback {
-        reactions.sayRandom(
-            "Я не понимать тебя, хозяйка(",
-            "Перефразируйте фразу"
-        )
+        if (context.dialogContext.transitionHistory.first != "/fallback") {
+            SessionInfo.fallbackCount = 0
+        }
+        SessionInfo.fallbackCount++
+        if (SessionInfo.fallbackCount < 3) {
+            reactions.sayRandom(
+                "Я не понимать тебя, хозяйка(",
+                "Перефразируйте фразу"
+            )
+        }
     }
 }

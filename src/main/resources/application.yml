@@ -7,4 +7,4 @@ connection:
   accessToken: 8a3a0439-4a5a-4580-b7e4-886612cbc2b6
 
 bot:
-  onErrorReply: "Извините, у нас все сломалось"
+  onErrorReply: "Кажется, что-то сломалось. Давайте попробуем ещё раз."
